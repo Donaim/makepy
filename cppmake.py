@@ -6,20 +6,53 @@ from os import path
 include_re_m = re.compile(r'^\s*#include\s*[<"].+[>"].*$')
 include_re_g = re.compile(r'[<"].+[>"]')
 
+class IncludeFile:
+    def __init__(self, rel_path: str, abs_path: str, include_dir: mp.IncludeDir):
+        self.rel_path = rel_path
+        self.abs_path = abs_path
+        self.include_dir = include_dir
+        
+        if self.abs_path is None:
+            self.type = 'implicit'      # not found or precompiled (like <stdio.h>, <stdlib.h>, ...)
+        elif self.include_dir is None:
+            self.type = 'abs'
+        else:
+            self.type = 'rel'
+
+    @staticmethod
+    def from_include_statement(line: str, include_dirs: list):
+        name = get_filename_from_include_statement(line)
+        return IncludeFile.from_filename(name, include_dirs)
+    @staticmethod
+    def from_filename(name, include_dirs: list):
+        if path.isabs(name):
+            if path.exists(name):
+                return IncludeFile(name, name, None)
+        else:
+            for d in include_dirs:
+                if d.is_my_rel_member(name):
+                    abs_path = d.get_abs_path(name)
+                    return IncludeFile(name, abs_path, d)
+
+        return IncludeFile(name, None, None)
+
 def is_include_statement(line: str) -> bool:
     return bool(include_re_m.match(line))
 def get_filename_from_include_statement(line: str) -> str:
     return include_re_g.search(line).group(0)[1:-1]
 
-def get_full_filename_from_include_statement(line: str, include_dirs: list):
-    name = get_filename_from_include_statement(line)
+def scan_text_include_names(text: str) -> iter:
+    for line in text.split('\n'):
+        if is_include_statement(line):
+            yield get_filename_from_include_statement(line)
 
-    if path.isabs(name):
-        if path.exists(name):
-            return name
-    else:
-        for d in include_dirs:
-            if d.is_my_rel_member(name):
-                return d.get_abs_path(name)
+def scan_file_include_names(filepath: str) -> iter:
+    with open(filepath) as r:
+        text = r.read()
+        return scan_text_include_names(text)
 
-    return None
+def scan_file_include_files(filepath: str, include_dirs: list) -> list:
+    names = scan_file_include_names(filepath)
+    files = map( lambda name: IncludeFile.from_filename(name, include_dirs), names )
+    return list(files)
+

@@ -31,16 +31,25 @@ class TestCustom(unittest.TestCase):
         self.assertEqual('hello.h', re2)
 
     def test_get_full_name(self):
-        re1 = cppmake.get_full_filename_from_include_statement('   #include <hello.h>   //some comment', self.idirs)
-        self.assertEqual('testproj/include1/hello.h', re1)
+        re1 = cppmake.IncludeFile.from_include_statement('   #include <hello.h>   //some comment', self.idirs)
+        self.assertEqual('testproj/include1/hello.h', re1.abs_path)
         
-        re2 = cppmake.get_full_filename_from_include_statement('   #include <bbb/kek.h>   //some comment', self.idirs)
-        self.assertEqual('testproj/include1/bbb/kek.h', re2)
+        re2 = cppmake.IncludeFile.from_include_statement('   #include <bbb/kek.h>   //some comment', self.idirs)
+        self.assertEqual('testproj/include1/bbb/kek.h', re2.abs_path)
         
-        re2 = cppmake.get_full_filename_from_include_statement('   #include <hehe.h>   //some comment', self.idirs)
-        self.assertEqual('testproj/include2/hehe.h', re2)
+        re3 = cppmake.IncludeFile.from_include_statement('   #include <hehe.h>   //some comment', self.idirs)
+        self.assertEqual('testproj/include2/hehe.h', re3.abs_path)
 
-        re2 = cppmake.get_full_filename_from_include_statement('   #include <../outer.h>   //some comment', self.idirs)
-        self.assertEqual('testproj/outer.h', re2)
+        re4 = cppmake.IncludeFile.from_include_statement('   #include <../outer.h>   //some comment', self.idirs)
+        self.assertEqual('testproj/outer.h', re4.abs_path)
+
+    def test_scan_file_names(self):
+        names = cppmake.scan_file_include_names('testproj/src/main.c')
+        names = list(names)
+        print(names)
+    def test_scan_file_includes(self):
+        files = cppmake.scan_file_include_files('testproj/src/main.c', self.idirs)
+        print( list( map( lambda f: f.abs_path, files ) ) )
+
 
 
