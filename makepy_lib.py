@@ -1,6 +1,35 @@
 import os, sys
 from os import path
 
+import abc
+
+class DirParams:
+    def __init__(self, dirpath: str, include_dirs: list):
+        self.dirpath = dirpath
+        self.include_dirs = include_dirs
+class InitedDir:
+    def __init__(self, params: DirParams, filter_rule):
+        self.params = params
+        self.files = dir_get_some_files(self.params.dirpath, filter_rule)
+
+class Manager(abc.ABC):
+
+    def gen_make1(self, template_filepath: str, dir_params: list) -> str:
+        def rule(filename): return self.filter_rule(filename)
+
+        inited_dirs = list( map( lambda p: InitedDir(p, rule), dir_params ) )
+        with open(template_filepath) as tf:
+            template = tf.read()
+            return self.generate_make(template, inited_dirs)
+    
+    @abc.abstractmethod
+    def filter_rule(self, filename: str) -> bool:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def generate_make(self, template: str, inited_dirs: list) -> str:
+        raise NotImplementedError()
+
 class IncludeDir:
     def __init__(self, dirpath):
         self.dirpath = dirpath

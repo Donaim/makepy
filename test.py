@@ -60,6 +60,15 @@ class TestCustom(unittest.TestCase):
 
         make_names = cppmake.get_all_make_dependencies(file, self.idirs)
 
-        r = makepy_lib.make_make_rule(file.abs_path, make_names, ["echo kek"])
+        r = makepy_lib.make_make_rule(file.abs_path.replace('.c', '.o'), make_names, ["echo kek"])
         print(r)
+
+    def test_generate_makefile(self):
+        mgr = cppmake.CppManager()
+
+        dir_params = [ makepy_lib.DirParams('testproj/src', self.idirs) ]
+        r = mgr.gen_make1('testproj/template.mk', dir_params)
+
+        print(r)
+
 
