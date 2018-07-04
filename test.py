@@ -7,7 +7,7 @@ class TestCustom(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(TestCustom, self).__init__(*args, **kwargs)
 
-        self.idirs = [ makepy_lib.IncludeDir('testproj/include1'), makepy_lib.IncludeDir('testproj/include2') ]
+        self.idirs = [ makepy_lib.IncludeDir('testproj/include1'), makepy_lib.IncludeDir('testproj/include2'), makepy_lib.IncludeDir('testproj/src') ]
 
     def test_makerule(self):
         r = makepy_lib.make_make_rule('test.c', ['test.h', 'string.h', 'hello.h.h'], ['$(CC) -c $@', '@ echo compiled $@'])
@@ -51,5 +51,15 @@ class TestCustom(unittest.TestCase):
         files = cppmake.scan_file_include_files('testproj/src/main.c', self.idirs)
         print( list( map( lambda f: f.abs_path, files ) ) )
 
+    def test_get_file_makerule(self):
+        file = cppmake.IncludeFile('testproj/src/main.c', 'testproj/src/main.c', makepy_lib.IncludeDir('testproj/src'))
+        deps = list(cppmake.get_all_dependencies(file, self.idirs))
 
+        names = list ( map( lambda f: f.abs_path , deps ) )
+        # print(names)
+
+        make_names = cppmake.get_all_make_dependencies(file, self.idirs)
+
+        r = makepy_lib.make_make_rule(file.abs_path, make_names, ["echo kek"])
+        print(r)
 

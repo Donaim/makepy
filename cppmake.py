@@ -19,6 +19,15 @@ class IncludeFile:
         else:
             self.type = 'rel'
 
+        self.dependencies = None
+
+    def collect_dependencies(self, include_dirs: list) -> None:
+        if not self.dependencies is None: return
+        if self.type == 'implicit': 
+            self.dependencies = []
+            return
+        self.dependencies = scan_file_include_files(self.abs_path, include_dirs)        
+
     @staticmethod
     def from_include_statement(line: str, include_dirs: list):
         name = get_filename_from_include_statement(line)
@@ -56,3 +65,11 @@ def scan_file_include_files(filepath: str, include_dirs: list) -> list:
     files = map( lambda name: IncludeFile.from_filename(name, include_dirs), names )
     return list(files)
 
+def get_all_dependencies(include_file: IncludeFile, include_dirs: list) -> iter:
+    include_file.collect_dependencies(include_dirs)
+    for d in include_file.dependencies:
+        yield d
+        for DD in get_all_dependencies(d, include_dirs):
+            yield DD
+def get_all_make_dependencies(include_file: IncludeFile, include_dirs: list) -> list:
+    return list( map( lambda d: d.abs_path, filter( lambda d: not d.abs_path is None, get_all_dependencies(include_file, include_dirs) ) ) )
