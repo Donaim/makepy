@@ -1,7 +1,8 @@
 
+CC= gcc
 CFLAGS= -Wall -O1
-
-CC= g++
+CL= gcc
+LFLAGS= 
 
 MAKEPY_TARGET= template.exe
 

@@ -4,8 +4,9 @@
 #include <../outer.h>
 #include "help.h"
 
-void main() {
+int main() {
 
 	printf("hello\n");
 
+	return 0;
 }

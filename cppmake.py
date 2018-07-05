@@ -2,6 +2,7 @@
 import makepy_lib as mp
 import re
 from os import path
+from functools import *
 
 include_re_m = re.compile(r'^\s*#include\s*[<"].+[>"].*$')
 include_re_g = re.compile(r'[<"].+[>"]')
@@ -77,9 +78,9 @@ def get_all_make_dependencies(include_file: IncludeFile, include_dirs: list) -> 
 
 class CppManager(mp.Manager):
 
-    def __init__(self, compile_commands: list, link_commands: list):
-        self.compile_commands = compile_commands
-        self.link_commands = link_commands
+    def __init__(self):
+        self.compile_commands = ['$(CC) $(CFLAGS) -o $@ -c $<']
+        self.link_commands =    ['$(CL) $(LFLAGS) -o $@    $^']
 
     allowed_exts = ['.c', '.cpp', '.cxx', '.cc', '.c++']
     def filter_rule(self, filename: str) -> bool:
@@ -100,12 +101,21 @@ class CppManager(mp.Manager):
         main_targets += mp.make_make_rule("$(MAKEPY_TARGET)", link_deps, self.link_commands)
         main_targets += '\n\n'
 
-        for d in inited_dirs:
+        for i, d in enumerate(inited_dirs):
+
+            inclname = 'INCL' + str(i)
+            incl = inclname + '= ' + reduce(lambda a, b: a + ' -I ' + b.dirpath, d.params.include_dirs, '')
+            main_targets += incl + '\n\n'
+            
+            ccommands = self.compile_commands
+            ccommands[0] = ccommands[0] + ' $({})'.format(inclname)
+
             for f in d.files:
                 ff = IncludeFile(f, f, None)
                 deps = get_all_make_dependencies(ff, d.params.include_dirs)
                 
                 target = CppManager.__get_o_target(f)
+                
                 main_targets += mp.make_make_rule(target, deps, self.compile_commands)
                 main_targets += '\n\n'
 
