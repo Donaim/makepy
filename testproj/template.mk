@@ -1,15 +1,8 @@
 
-## MAKEPY_CPP_COMPILE_COMMAND:
-# @ echo "compiling " $^ " for " $@
-# @ echo "heheh"
+CFLAGS= -Wall -O1
 
+CC= g++
 
-# CPPMAKEPY_LINK_COMMAND:
-# @ echo "linking " $^ " for " $@
-# @ echo ":)"
+MAKEPY_TARGET= template.exe
 
-# LLLLLLL
-# XXXXXXX
-# YYYYYYY
-# Zzzzzz
 

@@ -77,37 +77,27 @@ def get_all_make_dependencies(include_file: IncludeFile, include_dirs: list) -> 
 
 class CppManager(mp.Manager):
 
-    def filter_rule(self, filename: str) -> bool:
-        return filename.endswith('.c') or filename.endswith('.cpp')
+    def __init__(self, compile_commands: list, link_commands: list):
+        self.compile_commands = compile_commands
+        self.link_commands = link_commands
 
-    CPPMAKEPY_COMPILE_COMMAND_RE = re.compile(r'^#+\s*MAKEPY_CPP_COMPILE_COMMAND:?\s*$')
-    CPPMAKEPY_LINK_COMMAND_RE = re.compile(r'^#+\s*CPPMAKEPY_LINK_COMMAND:?\s*$')
-    def get_command(self, text: str, reg):
-        ret = []
-        mode = True
-        for line in text.split('\n'):
-            if mode:
-                if reg.match(line):
-                    mode = False
-            else:
-                if line.startswith('# '):
-                    ret.append(line[2:])
-                else:
-                    return ret
-        raise Exception('{} not found in template'.format(reg))
+    allowed_exts = ['.c', '.cpp', '.cxx', '.cc', '.c++']
+    def filter_rule(self, filename: str) -> bool:
+        return any( map( lambda ext: filename.endswith(ext), CppManager.allowed_exts ) )
+
+    def __get_o_target(source_file: str) -> str:
+        target, _ = path.splitext(source_file)
+        return target + '.o'
 
     def generate_make(self, template: str, inited_dirs: list) -> str:
-        CPPMAKEPY_COMPILE_COMMAND = self.get_command(template, CppManager.CPPMAKEPY_COMPILE_COMMAND_RE)
-        CPPMAKEPY_LINK_COMMAND    = self.get_command(template, CppManager.CPPMAKEPY_LINK_COMMAND_RE)
-
         main_targets = '\n\n'
 
         all_files = []
         for d in inited_dirs:
             for f in d.files:
                 all_files.append(f)
-        link_deps = map( lambda f: f.replace('.c', '.o'), all_files)
-        main_targets += mp.make_make_rule("$(MAKEPY_TARGET)", link_deps, CPPMAKEPY_LINK_COMMAND)
+        link_deps = map( CppManager.__get_o_target, all_files )
+        main_targets += mp.make_make_rule("$(MAKEPY_TARGET)", link_deps, self.link_commands)
         main_targets += '\n\n'
 
         for d in inited_dirs:
@@ -115,8 +105,8 @@ class CppManager(mp.Manager):
                 ff = IncludeFile(f, f, None)
                 deps = get_all_make_dependencies(ff, d.params.include_dirs)
                 
-                target = f.replace('.c', '.o')
-                main_targets += mp.make_make_rule(target, deps, CPPMAKEPY_COMPILE_COMMAND)
+                target = CppManager.__get_o_target(f)
+                main_targets += mp.make_make_rule(target, deps, self.compile_commands)
                 main_targets += '\n\n'
 
         return template + main_targets

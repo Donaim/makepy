@@ -14,11 +14,16 @@ class InitedDir:
 
 class Manager(abc.ABC):
 
-    def gen_make1(self, template_filepath: str, dir_params: list) -> str:
+    def generate_make_to(self, template_filepath: str, dir_params: list, output_filepath: str) -> None:
+        with open(output_filepath, 'w+') as w:
+            text = self.generate_make_by_params(template_filepath, dir_params)
+            w.write(text)
+
+    def generate_make_by_params(self, template_filepath: str, dir_params: list) -> str:
         def rule(filename): return self.filter_rule(filename)
 
         inited_dirs = list( map( lambda p: InitedDir(p, rule), dir_params ) )
-        with open(template_filepath) as tf:
+        with open(template_filepath, 'r') as tf:
             template = tf.read()
             return self.generate_make(template, inited_dirs)
     

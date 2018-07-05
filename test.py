@@ -64,11 +64,16 @@ class TestCustom(unittest.TestCase):
         print(r)
 
     def test_generate_makefile(self):
-        mgr = cppmake.CppManager()
+        mgr = cppmake.CppManager(['@ echo compile', '@ echo $@ $^'], ['@ echo linking $@ $^'])
 
         dir_params = [ makepy_lib.DirParams('testproj/src', self.idirs) ]
-        r = mgr.gen_make1('testproj/template.mk', dir_params)
+        r = mgr.generate_make_by_params('testproj/template.mk', dir_params)
 
         print(r)
 
+    def test_write_makefile(self):
+        mgr = cppmake.CppManager(['@ echo compile', '@ echo $@ $^'], ['@ echo linking $@ $^'])
+
+        dir_params = [ makepy_lib.DirParams('testproj/src', self.idirs) ]
+        mgr.generate_make_to('testproj/template.mk', dir_params, './Makefile')
 
