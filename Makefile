@@ -14,8 +14,12 @@ all: make_dirs $(BUILD)$(MAKEPY_TARGET)
 clean: 
 	- rm -rf "$(BUILD)"
 
-$(BUILD)$(MAKEPY_TARGET): $(BUILD)testproj/src/main.o $(BUILD)testproj/src/print.o
-	$(CL) $(LFLAGS) -o $@    $^
+LIBS=
+LIBS_FMT=
+
+LINK_DEPS=$(BUILD)testproj/src/main.o $(BUILD)testproj/src/print.o
+$(BUILD)$(MAKEPY_TARGET): $(LINK_DEPS) $(LIBS)
+	$(CL) $(LFLAGS) -o $@    $(LINK_DEPS)   $(LIBS_FMT)
 
 make_dirs: 
 	mkdir -p '$(BUILD)testproj/src'

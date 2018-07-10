@@ -80,8 +80,9 @@ class CppGenerator(mp.Generator):
 
     def __init__(self):
         self.compile_commands = ['$(CC) $(CFLAGS) -o $@ -c $<']
-        self.link_commands =    ['$(CL) $(LFLAGS) -o $@    $^']
+        self.link_commands =    ['$(CL) $(LFLAGS) -o $@    $(LINK_DEPS)   $(LIBS_FMT)']
         self.targets_prefix = '$(BUILD)'
+        self.libs = []
 
     allowed_exts = ['.c', '.cpp', '.cxx', '.cc', '.c++']
     def filter_rule(self, filename: str) -> bool:
@@ -99,13 +100,17 @@ class CppGenerator(mp.Generator):
     def get_phony_part(self):
         return '\n'.join( ['.PHONY: clean', '.PHONY: all'] )
     def get_link_part(self, link_target: str, inited_dirs: list) -> str:
-        all_files = []
-        for d in inited_dirs:
-            for f in d.files:
-                all_files.append(f)
-        link_deps = map( self.__get_o_target, all_files)
-        main_targets = mp.make_make_rule( link_target, link_deps, self.link_commands)
-        return main_targets
+        re = ''
+        
+        re += 'LIBS=' + ' '.join(self.libs) + '\n'
+        re += 'LIBS_FMT=' + ' -L '.join([''] + self.libs) + '\n\n'
+        
+        all_files = reduce(lambda acc, d: acc + d.files, inited_dirs, [])
+        link_deps = list(map( self.__get_o_target, all_files))
+        re += 'LINK_DEPS=' + ' '.join(link_deps) + '\n'
+        re += mp.make_make_rule( link_target, ['$(LINK_DEPS)', '$(LIBS)'], self.link_commands)
+        
+        return re
     def get_compile_part(self, inited_dirs: list) -> str:
         compile_targets = ''
         make_dirs_list = set()
