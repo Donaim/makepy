@@ -81,25 +81,33 @@ class CppManager(mp.Manager):
     def __init__(self):
         self.compile_commands = ['$(CC) $(CFLAGS) -o $@ -c $<']
         self.link_commands =    ['$(CL) $(LFLAGS) -o $@    $^']
+        self.targets_prefix = 'build/'
 
     allowed_exts = ['.c', '.cpp', '.cxx', '.cc', '.c++']
     def filter_rule(self, filename: str) -> bool:
         return any( map( lambda ext: filename.endswith(ext), CppManager.allowed_exts ) )
 
-    def __get_o_target(source_file: str) -> str:
+    def __get_o_target(self, source_file: str) -> str:
         target, _ = path.splitext(source_file)
-        return target + '.o'
+        target = target + '.o'
+        target = self.targets_prefix + target
+        return target
 
     def generate_make(self, template: str, inited_dirs: list) -> str:
-        main_targets = '\n\n'
+        link_target = self.targets_prefix + '$(MAKEPY_TARGET)'
+
+        all_part = mp.make_make_rule('all', ['make_dirs', link_target], ['@ echo all'])
+        all_part += '\n\n'
 
         all_files = []
         for d in inited_dirs:
             for f in d.files:
                 all_files.append(f)
-        link_deps = map( CppManager.__get_o_target, all_files )
-        main_targets += mp.make_make_rule("$(MAKEPY_TARGET)", link_deps, self.link_commands)
+        link_deps = map( self.__get_o_target, all_files)
+        main_targets = mp.make_make_rule( link_target, link_deps, self.link_commands)
         main_targets += '\n\n'
+
+        make_dirs_list = set()
 
         for i, d in enumerate(inited_dirs):
 
@@ -114,11 +122,19 @@ class CppManager(mp.Manager):
                 ff = IncludeFile(f, f, None)
                 deps = get_all_make_dependencies(ff, d.params.include_dirs)
                 
-                target = CppManager.__get_o_target(f)
+                target = self.__get_o_target(f)
+                target_dir = path.dirname(target)
+                make_dirs_list.add(target_dir)
                 
                 main_targets += mp.make_make_rule(target, deps, self.compile_commands)
                 main_targets += '\n\n'
 
-        return template + main_targets
+        makedirs_part = mp.make_make_rule('make_dirs', [''], ['mkdir -p {}'.format(' '.join(make_dirs_list))])
+        makedirs_part += '\n\n'
+
+        clean_part = mp.make_make_rule('clean', [''], ['- rm -rf "{}"'.format(self.targets_prefix)])
+        clean_part += '\n\n'
+
+        return template + all_part + makedirs_part + clean_part + main_targets
 
 
