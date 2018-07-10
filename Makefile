@@ -18,7 +18,7 @@ $(BUILD)$(MAKEPY_TARGET): $(BUILD)testproj/src/main.o $(BUILD)testproj/src/print
 	$(CL) $(LFLAGS) -o $@    $^
 
 make_dirs: 
-	mkdir -p $(BUILD)testproj/src
+	mkdir -p '$(BUILD)testproj/src'
 
 INCL0=  -I testproj/include1 -I testproj/include2 -I testproj/src
 

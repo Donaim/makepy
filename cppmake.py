@@ -130,7 +130,8 @@ class CppManager(mp.Manager):
                 compile_targets += mp.make_make_rule(target, deps, self.compile_commands)
                 compile_targets += '\n\n'
         
-        makedirs_part = mp.make_make_rule('make_dirs', [''], ['mkdir -p {}'.format(' '.join(make_dirs_list))])
+        make_dirs_list_str = ' '.join(map(lambda x: "'" + x + "'", make_dirs_list ))
+        makedirs_part = mp.make_make_rule('make_dirs', [''], ['mkdir -p {}'.format(make_dirs_list_str)])
         
         return makedirs_part + '\n\n' + compile_targets
 
