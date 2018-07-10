@@ -7,6 +7,9 @@ class DirParams:
     def __init__(self, dirpath: str, include_dirs: list):
         self.dirpath = dirpath
         self.include_dirs = include_dirs
+    def create_with_same_include_dirs(dirpaths: list, include_dirs: list) -> list:
+        return list( map( lambda d: DirParams(d, include_dirs), dirpaths ) )
+
 class InitedDir:
     def __init__(self, params: DirParams, filter_rule):
         self.params = params
@@ -14,7 +17,7 @@ class InitedDir:
 
 class Manager(abc.ABC):
 
-    def generate_make_to(self, template_filepath: str, dir_params: list, output_filepath: str) -> None:
+    def generate_make_to(self, template_filepath: str, output_filepath: str, dir_params: list) -> None:
         with open(output_filepath, 'w+') as w:
             text = self.generate_make_by_params(template_filepath, dir_params)
             w.write(text)

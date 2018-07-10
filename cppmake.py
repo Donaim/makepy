@@ -135,6 +135,11 @@ class CppManager(mp.Manager):
         
         return makedirs_part + '\n\n' + compile_targets
 
+    def generate_make_to_with_same_include_dirs(self, template_filepath: str, output_filepath: str, dirpaths: list, include_dirs: list) -> str:
+        return self.generate_make_to(
+            template_filepath=template_filepath,
+            output_filepath=output_filepath,
+            dir_params= mp.DirParams.create_with_same_include_dirs(dirpaths=dirpaths, include_dirs=include_dirs))
     def generate_make(self, template: str, inited_dirs: list) -> str:
         link_target = self.targets_prefix + '$(MAKEPY_TARGET)'
 
