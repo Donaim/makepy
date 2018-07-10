@@ -81,7 +81,7 @@ class CppManager(mp.Manager):
     def __init__(self):
         self.compile_commands = ['$(CC) $(CFLAGS) -o $@ -c $<']
         self.link_commands =    ['$(CL) $(LFLAGS) -o $@    $^']
-        self.targets_prefix = 'build/'
+        self.targets_prefix = '$(BUILD)'
 
     allowed_exts = ['.c', '.cpp', '.cxx', '.cc', '.c++']
     def filter_rule(self, filename: str) -> bool:
@@ -92,28 +92,29 @@ class CppManager(mp.Manager):
         target = target + '.o'
         target = self.targets_prefix + target
         return target
-
-    def generate_make(self, template: str, inited_dirs: list) -> str:
-        link_target = self.targets_prefix + '$(MAKEPY_TARGET)'
-
-        all_part = mp.make_make_rule('all', ['make_dirs', link_target], ['@ echo all'])
-        all_part += '\n\n'
-
+    def get_all_part(self, link_target: str) -> str:
+        return mp.make_make_rule('all', ['make_dirs', link_target], ['@ echo "all finished"'])
+    def get_clean_part(self):
+        return mp.make_make_rule('clean', [''], ['- rm -rf "{}"'.format(self.targets_prefix)])
+    def get_phony_part(self):
+        return '\n'.join( ['.PHONY: clean', '.PHONY: all'] )
+    def get_link_part(self, link_target: str, inited_dirs: list) -> str:
         all_files = []
         for d in inited_dirs:
             for f in d.files:
                 all_files.append(f)
         link_deps = map( self.__get_o_target, all_files)
         main_targets = mp.make_make_rule( link_target, link_deps, self.link_commands)
-        main_targets += '\n\n'
-
+        return main_targets
+    def get_compile_part(self, inited_dirs: list) -> str:
+        compile_targets = ''
         make_dirs_list = set()
 
         for i, d in enumerate(inited_dirs):
 
             inclname = 'INCL' + str(i)
             incl = inclname + '= ' + reduce(lambda a, b: a + ' -I ' + b.dirpath, d.params.include_dirs, '')
-            main_targets += incl + '\n\n'
+            compile_targets += incl + '\n\n'
             
             ccommands = self.compile_commands
             ccommands[0] = ccommands[0] + ' $({})'.format(inclname)
@@ -126,15 +127,22 @@ class CppManager(mp.Manager):
                 target_dir = path.dirname(target)
                 make_dirs_list.add(target_dir)
                 
-                main_targets += mp.make_make_rule(target, deps, self.compile_commands)
-                main_targets += '\n\n'
-
+                compile_targets += mp.make_make_rule(target, deps, self.compile_commands)
+                compile_targets += '\n\n'
+        
         makedirs_part = mp.make_make_rule('make_dirs', [''], ['mkdir -p {}'.format(' '.join(make_dirs_list))])
-        makedirs_part += '\n\n'
+        
+        return makedirs_part + '\n\n' + compile_targets
 
-        clean_part = mp.make_make_rule('clean', [''], ['- rm -rf "{}"'.format(self.targets_prefix)])
-        clean_part += '\n\n'
+    def generate_make(self, template: str, inited_dirs: list) -> str:
+        link_target = self.targets_prefix + '$(MAKEPY_TARGET)'
 
-        return template + all_part + makedirs_part + clean_part + main_targets
+        all_part = self.get_all_part(link_target)
+        link_part = self.get_link_part(link_target, inited_dirs)
+        clean_part = self.get_clean_part()
+        compile_part = self.get_compile_part(inited_dirs)
+        phony_part = self.get_phony_part()
+
+        return '\n\n'.join( [template, all_part, clean_part, link_part, compile_part, phony_part] )
 
 

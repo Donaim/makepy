@@ -5,25 +5,30 @@ CL= gcc
 LFLAGS= 
 
 MAKEPY_TARGET= template.exe
+BUILD=./build/
 
 
-all: make_dirs build/$(MAKEPY_TARGET)
-	@ echo all
-
-make_dirs: 
-	mkdir -p build/testproj/src
+all: make_dirs $(BUILD)$(MAKEPY_TARGET)
+	@ echo "all finished"
 
 clean: 
-	- rm -rf "build/"
+	- rm -rf "$(BUILD)"
 
-build/$(MAKEPY_TARGET): build/testproj/src/main.o build/testproj/src/print.o
+$(BUILD)$(MAKEPY_TARGET): $(BUILD)testproj/src/main.o $(BUILD)testproj/src/print.o
 	$(CL) $(LFLAGS) -o $@    $^
+
+make_dirs: 
+	mkdir -p $(BUILD)testproj/src
 
 INCL0=  -I testproj/include1 -I testproj/include2 -I testproj/src
 
-build/testproj/src/main.o: testproj/src/main.c testproj/include1/hello.h testproj/outer.h testproj/src/help.h testproj/include1/bbb/kek.h
+$(BUILD)testproj/src/main.o: testproj/src/main.c testproj/include1/hello.h testproj/outer.h testproj/src/help.h testproj/include1/bbb/kek.h
 	$(CC) $(CFLAGS) -o $@ -c $< $(INCL0)
 
-build/testproj/src/print.o: testproj/src/print.c testproj/include1/hello.h
+$(BUILD)testproj/src/print.o: testproj/src/print.c testproj/include1/hello.h
 	$(CC) $(CFLAGS) -o $@ -c $< $(INCL0)
 
+
+
+.PHONY: clean
+.PHONY: all
