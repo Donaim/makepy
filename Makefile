@@ -16,8 +16,8 @@ clean:
 
 LIBS=
 LIBS_FMT=
-
 LINK_DEPS=$(BUILD)testproj/src/main.o $(BUILD)testproj/src/print.o
+
 $(BUILD)$(MAKEPY_TARGET): $(LINK_DEPS) $(LIBS)
 	$(CL) $(LFLAGS) -o $@    $(LINK_DEPS)   $(LIBS_FMT)
 

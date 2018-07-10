@@ -103,11 +103,11 @@ class CppGenerator(mp.Generator):
         re = ''
         
         re += 'LIBS=' + ' '.join(self.libs) + '\n'
-        re += 'LIBS_FMT=' + ' -L '.join([''] + self.libs) + '\n\n'
-        
+        re += 'LIBS_FMT=' + ' -L '.join([''] + self.libs) + '\n'
         all_files = reduce(lambda acc, d: acc + d.files, inited_dirs, [])
         link_deps = list(map( self.__get_o_target, all_files))
-        re += 'LINK_DEPS=' + ' '.join(link_deps) + '\n'
+        re += 'LINK_DEPS=' + ' '.join(link_deps) + '\n\n'
+        
         re += mp.make_make_rule( link_target, ['$(LINK_DEPS)', '$(LIBS)'], self.link_commands)
         
         return re
