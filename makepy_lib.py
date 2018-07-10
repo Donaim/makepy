@@ -15,7 +15,7 @@ class InitedDir:
         self.params = params
         self.files = dir_get_some_files(self.params.dirpath, filter_rule)
 
-class Manager(abc.ABC):
+class Generator(abc.ABC):
 
     def generate_make_to(self, template_filepath: str, output_filepath: str, dir_params: list) -> None:
         with open(output_filepath, 'w+') as w:

@@ -64,7 +64,7 @@ class TestCustom(unittest.TestCase):
         print(r)
 
     def test_generate_makefile(self):
-        mgr = cppmake.CppManager()
+        mgr = cppmake.CppGenerator()
 
         dir_params = [ makepy_lib.DirParams('testproj/src', self.idirs) ]
         r = mgr.generate_make_by_params('testproj/template.mk', dir_params)
@@ -72,7 +72,7 @@ class TestCustom(unittest.TestCase):
         print(r)
 
     def test_write_makefile(self):
-        mgr = cppmake.CppManager()
+        mgr = cppmake.CppGenerator()
 
         # dir_params = [ makepy_lib.DirParams('testproj/src', self.idirs) ]
         # mgr.generate_make_to('testproj/template.mk', './Makefile', dir_params)

@@ -76,7 +76,7 @@ def get_all_make_dependencies(include_file: IncludeFile, include_dirs: list) -> 
     return list( map( lambda d: d.abs_path, filter( lambda d: not d.abs_path is None, get_all_dependencies(include_file, include_dirs) ) ) )
 
 
-class CppManager(mp.Manager):
+class CppGenerator(mp.Generator):
 
     def __init__(self):
         self.compile_commands = ['$(CC) $(CFLAGS) -o $@ -c $<']
@@ -85,7 +85,7 @@ class CppManager(mp.Manager):
 
     allowed_exts = ['.c', '.cpp', '.cxx', '.cc', '.c++']
     def filter_rule(self, filename: str) -> bool:
-        return any( map( lambda ext: filename.endswith(ext), CppManager.allowed_exts ) )
+        return any( map( lambda ext: filename.endswith(ext), CppGenerator.allowed_exts ) )
 
     def __get_o_target(self, source_file: str) -> str:
         target, _ = path.splitext(source_file)
