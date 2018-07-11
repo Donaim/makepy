@@ -16,7 +16,7 @@ clean:
 
 LIBS=
 LIBS_FMT=
-LINK_DEPS=$(BUILD)testproj/src/main.o $(BUILD)testproj/src/print.o
+LINK_DEPS=$(BUILD)testproj/src/main.o $(BUILD)testproj/src/print.o $(BUILD)testproj/src/help.o
 
 $(BUILD)$(MAKEPY_TARGET): $(LINK_DEPS) $(LIBS)
 	$(CL) $(LFLAGS) -o $@    $(LINK_DEPS)   $(LIBS_FMT)
@@ -30,6 +30,9 @@ $(BUILD)testproj/src/main.o: testproj/src/main.c testproj/include1/hello.h testp
 	$(CC) $(CFLAGS) -o $@ -c $< $(INCL0)
 
 $(BUILD)testproj/src/print.o: testproj/src/print.c testproj/include1/hello.h
+	$(CC) $(CFLAGS) -o $@ -c $< $(INCL0)
+
+$(BUILD)testproj/src/help.o: testproj/src/help.c testproj/src/help.h testproj/include1/bbb/kek.h
 	$(CC) $(CFLAGS) -o $@ -c $< $(INCL0)
 
 

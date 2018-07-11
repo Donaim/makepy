@@ -17,23 +17,21 @@ class InitedDir:
 
 class Generator(abc.ABC):
 
+    def __init__(self):
+        def rule(filename): raise NotImplementedError('Base class does not implement filter_rule')
+        self.filter_rule = rule
+        
     def generate_make_to(self, template_filepath: str, output_filepath: str, dir_params: list) -> None:
         with open(output_filepath, 'w+') as w:
             text = self.generate_make_by_params(template_filepath, dir_params)
             w.write(text)
 
     def generate_make_by_params(self, template_filepath: str, dir_params: list) -> str:
-        def rule(filename): return self.filter_rule(filename)
-
-        inited_dirs = list( map( lambda p: InitedDir(p, rule), dir_params ) )
+        inited_dirs = list( map( lambda p: InitedDir(p, self.filter_rule), dir_params ) )
         with open(template_filepath, 'r') as tf:
             template = tf.read()
             return self.generate_make(template, inited_dirs)
     
-    @abc.abstractmethod
-    def filter_rule(self, filename: str) -> bool:
-        raise NotImplementedError()
-
     @abc.abstractmethod
     def generate_make(self, template: str, inited_dirs: list) -> str:
         raise NotImplementedError()

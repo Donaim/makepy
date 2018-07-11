@@ -109,9 +109,11 @@ class CppGenerator(mp.Generator):
         self.link_commands =    ['$(CL) $(LFLAGS) -o $@    $(LINK_DEPS)   $(LIBS_FMT)']
         self.targets_prefix = '$(BUILD)'
         self.libs = []
+        self.filter_rule = CppGenerator.std_filter_rule
 
     allowed_exts = ['.c', '.cpp', '.cxx', '.cc', '.c++']
-    def filter_rule(self, filename: str) -> bool:
+    @staticmethod
+    def std_filter_rule(filename: str) -> bool:
         return any( map( lambda ext: filename.endswith(ext), CppGenerator.allowed_exts ) )
 
     def __get_o_target(self, source_file: str) -> str:
