@@ -3,11 +3,13 @@ import unittest
 import makepy_lib
 import cppmake
 
+cppmake.NOTIFY_ABOUT_NOT_FOUND_FILES = True
+
 class TestCustom(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(TestCustom, self).__init__(*args, **kwargs)
 
-        self.idirs = [ makepy_lib.IncludeDir('testproj/include1'), makepy_lib.IncludeDir('testproj/include2'), makepy_lib.IncludeDir('testproj/src') ]
+        self.idirs = [ makepy_lib.IncludeDir('testproj/include1'), makepy_lib.IncludeDir('testproj/include2') ]
 
     def test_makerule(self):
         r = makepy_lib.make_make_rule('test.c', ['test.h', 'string.h', 'hello.h.h'], ['$(CC) -c $@', '@ echo compiled $@'])
@@ -44,7 +46,7 @@ class TestCustom(unittest.TestCase):
         self.assertEqual('testproj/outer.h', re4.abs_path)
 
     def test_scan_file_names(self):
-        names = cppmake.scan_file_include_names('testproj/src/main.c')
+        names = cppmake.scan_file_include_statements('testproj/src/main.c')
         names = list(names)
         print(names)
     def test_scan_file_includes(self):

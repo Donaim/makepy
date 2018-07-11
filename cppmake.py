@@ -1,11 +1,33 @@
 
 import makepy_lib as mp
 import re
+import sys
 from os import path
 from functools import *
 
-include_re_m = re.compile(r'^\s*#include\s*[<"].+[>"].*$')
-include_re_g = re.compile(r'[<"].+[>"]')
+NOTIFY_ABOUT_NOT_FOUND_FILES = True
+
+class IncludeStatement:
+    re_m = re.compile(r'^\s*#include\s*[<"].+[>"].*$')
+    re_g = re.compile(r'[<"].+[>"]')
+    
+    def __init__(self, target: str, source_file: str, is_quoted: bool):
+        self.target = target
+        self.source_file = source_file
+        self.is_quoted = is_quoted
+    
+    @staticmethod
+    def try_create(line: str, source_file: str):
+        if IncludeStatement.re_m.match(line):
+            return IncludeStatement.from_include_line(line, source_file)
+        else:
+            return None
+    @staticmethod    
+    def from_include_line(line: str, source_file: str):
+        t = IncludeStatement.re_g.search(line).group(0)
+        target = t[1:-1]
+        is_quoted = t.startswith('"')
+        return IncludeStatement(target=target, source_file=source_file, is_quoted=is_quoted)
 
 class IncludeFile:
     def __init__(self, rel_path: str, abs_path: str, include_dir: mp.IncludeDir):
@@ -30,40 +52,44 @@ class IncludeFile:
         self.dependencies = scan_file_include_files(self.abs_path, include_dirs)        
 
     @staticmethod
-    def from_include_statement(line: str, include_dirs: list):
+    def from_include_line(line: str, include_dirs: list):
         name = get_filename_from_include_statement(line)
-        return IncludeFile.from_filename(name, include_dirs)
+        return IncludeFile.from_include_statement(name, include_dirs)
     @staticmethod
-    def from_filename(name, include_dirs: list):
+    def from_include_statement(st: IncludeStatement, include_dirs: list):
+        name = st.target
         if path.isabs(name):
             if path.exists(name):
                 return IncludeFile(name, name, None)
         else:
+            if st.is_quoted:
+                d = mp.IncludeDir( path.dirname(st.source_file) )
+                if d.is_my_rel_member(name):
+                    abs_path = d.get_abs_path(name)
+                    return IncludeFile(name, abs_path, d)
             for d in include_dirs:
                 if d.is_my_rel_member(name):
                     abs_path = d.get_abs_path(name)
                     return IncludeFile(name, abs_path, d)
-
+    
+        if NOTIFY_ABOUT_NOT_FOUND_FILES:
+            print('include not found: "{}" \t in \t "{}" '.format(st.target, st.source_file), file=sys.stderr)
         return IncludeFile(name, None, None)
 
 def is_include_statement(line: str) -> bool:
     return bool(include_re_m.match(line))
-def get_filename_from_include_statement(line: str) -> str:
-    return include_re_g.search(line).group(0)[1:-1]
 
-def scan_text_include_names(text: str) -> iter:
-    for line in text.split('\n'):
-        if is_include_statement(line):
-            yield get_filename_from_include_statement(line)
-
-def scan_file_include_names(filepath: str) -> iter:
+def scan_file_include_statements(filepath: str) -> iter:
     with open(filepath) as r:
         text = r.read()
-        return scan_text_include_names(text)
+        for line in text.split('\n'):
+            st = IncludeStatement.try_create(line, filepath)
+            if not st is None:
+                yield st
 
 def scan_file_include_files(filepath: str, include_dirs: list) -> list:
-    names = scan_file_include_names(filepath)
-    files = map( lambda name: IncludeFile.from_filename(name, include_dirs), names )
+    names = scan_file_include_statements(filepath)
+    files = map( lambda name: IncludeFile.from_include_statement(name, include_dirs), names )
     return list(files)
 
 def get_all_dependencies(include_file: IncludeFile, include_dirs: list) -> iter:

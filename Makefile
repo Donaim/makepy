@@ -24,7 +24,7 @@ $(BUILD)$(MAKEPY_TARGET): $(LINK_DEPS) $(LIBS)
 make_dirs: 
 	mkdir -p '$(BUILD)testproj/src'
 
-INCL0=  -I testproj/include1 -I testproj/include2 -I testproj/src
+INCL0=  -I testproj/include1 -I testproj/include2
 
 $(BUILD)testproj/src/main.o: testproj/src/main.c testproj/include1/hello.h testproj/outer.h testproj/src/help.h testproj/include1/bbb/kek.h
 	$(CC) $(CFLAGS) -o $@ -c $< $(INCL0)
