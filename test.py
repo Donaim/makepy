@@ -9,7 +9,8 @@ class TestCustom(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(TestCustom, self).__init__(*args, **kwargs)
 
-        self.idirs = [ makepy_lib.IncludeDir('testproj/include1'), makepy_lib.IncludeDir('testproj/include2') ]
+        self.idirs_str = ['testproj/include1', 'testproj/include2']
+        self.idirs     = list( map( makepy_lib.IncludeDir, self.idirs_str ))
 
     def test_makerule(self):
         r = makepy_lib.make_make_rule('test.c', ['test.h', 'string.h', 'hello.h.h'], ['$(CC) -c $@', '@ echo compiled $@'])
@@ -78,5 +79,5 @@ class TestCustom(unittest.TestCase):
 
         # dir_params = [ makepy_lib.DirParams('testproj/src', self.idirs) ]
         # mgr.generate_make_to('testproj/template.mk', './Makefile', dir_params)
-        mgr.generate_make_to_with_same_include_dirs('testproj/template.mk', './Makefile', ['testproj/src'], self.idirs)
+        mgr.generate_make_to_with_same_include_dirs('testproj/template.mk', './Makefile', ['testproj/src'], self.idirs_str)
 

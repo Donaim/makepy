@@ -167,6 +167,7 @@ class CppGenerator(mp.Generator):
         return makedirs_part + '\n\n' + compile_targets
 
     def generate_make_to_with_same_include_dirs(self, template_filepath: str, output_filepath: str, dirpaths: list, include_dirs: list) -> str:
+        include_dirs = list( map( mp.IncludeDir, include_dirs ))
         return self.generate_make_to(
             template_filepath=template_filepath,
             output_filepath=output_filepath,
