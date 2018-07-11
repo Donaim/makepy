@@ -5,7 +5,7 @@ import sys
 from os import path
 from functools import *
 
-NOTIFY_ABOUT_NOT_FOUND_FILES = True
+NOTIFY_ABOUT_NOT_FOUND_FILES = False
 
 class IncludeStatement:
     re_m = re.compile(r'^\s*#include\s*[<"].+[>"].*$')
